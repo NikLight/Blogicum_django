@@ -39,8 +39,8 @@ class ProfileDetailView(DetailView):
     def get_context_data(self, **kwargs):
         """
         Добавляет в контекст данные о постах пользователя
-         и объект пагинации.
-         """
+        и объект пагинации.
+        """
         context = super().get_context_data(**kwargs)
         user = self.object
         posts = Post.objects.filter(author=user).annotate(
@@ -50,7 +50,10 @@ class ProfileDetailView(DetailView):
         return context
 
     def paginate_posts(self, posts):
-        """Пагинирует список постов и возвращает объект текущей страницы."""
+        """
+        Пагинирует список постов
+        и возвращает объект текущей страницы.
+        """
         paginator = Paginator(posts, 10)
         page_number = self.request.GET.get('page')
         return paginator.get_page(page_number)
@@ -68,7 +71,10 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
         return self.request.user
 
     def get_success_url(self):
-        """Возвращает URL для перенаправления после успешного сохранения изменений."""
+        """
+        Возвращает URL для перенаправления
+        после успешного сохранения изменений.
+        """
         return reverse_lazy(
             'blog:profile',
             kwargs={'username': self.object.username})
@@ -77,8 +83,8 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
 def get_filtered_posts():
     """
     Возвращает список опубликованных постов,
-     отсортированных по дате публикации.
-     """
+    отсортированных по дате публикации.
+    """
     return Post.objects.select_related(
         'author', 'category', 'location'
     ).filter(
@@ -146,7 +152,10 @@ class PostCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        """Возвращает URL для перенаправления после успешного создания поста."""
+        """
+        Возвращает URL для перенаправления
+        после успешного создания поста.
+        """
         return reverse_lazy(
             'blog:profile',
             kwargs={'username': self.request.user.username})
@@ -161,7 +170,10 @@ class EditPostView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView):
     template_name = 'blog/create.html'
 
     def dispatch(self, request, *args, **kwargs):
-        """Проверяет, что пользователь аутентифицирован и является автором поста."""
+        """
+        Проверяет, что пользователь аутентифицирован
+        и является автором поста.
+        """
         if not request.user.is_authenticated:
             return self.handle_no_permission()
 
@@ -192,7 +204,10 @@ class PostDetailView(LoginRequiredMixin, DetailView):
     pk_url_kwarg = 'post_id'
 
     def get_object(self, queryset=None):
-        """Возвращает объект поста, если он доступен текущему пользователю."""
+        """
+        Возвращает объект поста,
+        если он доступен текущему пользователю.
+        """
         post = super().get_object(queryset)
 
         if post.author != self.request.user and (
@@ -204,7 +219,10 @@ class PostDetailView(LoginRequiredMixin, DetailView):
         return post
 
     def get_context_data(self, **kwargs):
-        """Добавляет в контекст форму для комментариев и список комментариев."""
+        """
+        Добавляет в контекст форму для
+        комментариев и список комментариев.
+        """
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
         context['comments'] = self.object.comments.select_related('author')
@@ -218,7 +236,10 @@ class CommentPostView(LoginRequiredMixin, CreateView):
     form_class = CommentForm
 
     def form_valid(self, form):
-        """Устанавливает текущего пользователя как автора комментария и сохраняет его."""
+        """
+        Устанавливает текущего пользователя
+        как автора комментария и сохраняет его.
+        """
         post_id = self.kwargs['post_id']
         post = get_object_or_404(Post, id=post_id)
         form.instance.author = self.request.user
@@ -227,9 +248,13 @@ class CommentPostView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        """Возвращает URL для перенаправления после успешного создания комментария."""
+        """
+        Возвращает URL для перенаправления
+        после успешного создания комментария.
+        """
         post_id = self.kwargs['post_id']
-        return reverse_lazy('blog:post_detail', kwargs={'post_id': post_id})
+        return reverse_lazy('blog:post_detail',
+                            kwargs={'post_id': post_id})
 
 
 class CommentEditView(LoginRequiredMixin, UpdateView):
@@ -241,15 +266,24 @@ class CommentEditView(LoginRequiredMixin, UpdateView):
     pk_url_kwarg = 'comment_id'
 
     def get_object(self, queryset=None):
-        """Возвращает комментарий, если он принадлежит текущему пользователю."""
+        """
+        Возвращает комментарий,
+        если он принадлежит текущему пользователю.
+        """
         comment = super().get_object(queryset)
         if comment.author != self.request.user:
-            raise PermissionDenied("Вы не можете редактировать этот комментарий")
+            raise PermissionDenied(
+                "Вы не можете редактировать этот комментарий")
         return comment
 
     def get_success_url(self):
-        """Возвращает URL для перенаправления после успешного редактирования комментария."""
-        return reverse_lazy('blog:post_detail', kwargs={'post_id': self.object.post.id})
+        """
+        Возвращает URL для перенаправления
+        после успешного редактирования комментария.
+        """
+        return reverse_lazy(
+            'blog:post_detail',
+            kwargs={'post_id': self.object.post.id})
 
 
 class CommentDeleteView(LoginRequiredMixin, DeleteView):
@@ -260,18 +294,29 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'blog/comment.html'
 
     def get_object(self, queryset=None):
-        """Возвращает комментарий, если он принадлежит текущему пользователю."""
+        """
+        Возвращает комментарий,
+        если он принадлежит текущему пользователю.
+        """
         comment = super().get_object()
         if comment.author != self.request.user:
-            raise PermissionDenied("Вы не можете удалить этот комментарий")
+            raise PermissionDenied(
+                "Вы не можете удалить этот комментарий")
         return comment
 
     def get_context_data(self, **kwargs):
-        """Убирает форму из контекста, чтобы отображался только процесс удаления комментария."""
+        """
+        Убирает форму из контекста,
+        чтобы отображался только процесс удаления комментария.
+        """
         context = super().get_context_data(**kwargs)
         context['form'] = None
         return context
 
     def get_success_url(self):
-        """Возвращает URL для перенаправления после успешного удаления комментария."""
-        return reverse_lazy('blog:post_detail', kwargs={'post_id': self.object.post.id})
+        """
+        Возвращает URL для перенаправления
+        после успешного удаления комментария.
+        """
+        return reverse_lazy('blog:post_detail',
+                            kwargs={'post_id': self.object.post.id})
