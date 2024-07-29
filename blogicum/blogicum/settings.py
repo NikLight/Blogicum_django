@@ -15,8 +15,10 @@ SECRET_KEY = 'django-insecure-_zyi)93rfwa&1acx4#(z(fzev1+t_%ccwvc@+h-i#*=xmfai9z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+]
 
 # Application definition
 
@@ -29,6 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'blog.apps.BlogConfig',
     'pages.apps.PagesConfig',
+    'core.apps.CoreConfig',
+    'django_bootstrap5',
     'debug_toolbar',
 ]
 
@@ -45,12 +49,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'blogicum.urls'
 
-TEMPLATES_DIRS = os.path.join(BASE_DIR, 'templates')
+TEMPLATES_DIR = BASE_DIR / 'templates'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [TEMPLATES_DIRS],
+        'DIRS': [TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -114,6 +118,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Default primary key field type
@@ -121,12 +126,28 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+MEDIA_ROOT = BASE_DIR / 'media/'
+
+MEDIA_URL = '/media/'
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+
+EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
+
+TITLE_MAX_LENGTH = 20
+
+MAX_COMM_TEXT_LENGTH = 30
+
+CHARFIELD_MAX_LENGTH = 256
+
+MAX_POSTS = 10
+
+LOGIN_REDIRECT_URL = 'blog:index'
+
+LOGIN_URL = 'login'
+
 INTERNAL_IPS = [
     '127.0.0.1',
 ]
 
-TITLE_MAX_LENGTH = 20
-
-CHARFIELD_MAX_LENGTH = 256
-
-MAX_POSTS = 5
+CSRF_FAILURE_VIEW = 'pages.views.csrf_failure'
