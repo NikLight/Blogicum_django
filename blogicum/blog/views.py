@@ -15,10 +15,10 @@ from .models import Post, Category, User, Comment
 
 
 class OnlyAuthorMixin(UserPassesTestMixin):
-    """Mixin, проверяющий, что текущий пользователь является автором объекта."""
+    """Mixin, проверяющий, что текущий пользователь является автором."""
 
     def test_func(self):
-        """Проверяет, что автор текущего объекта совпадает с текущим пользователем."""
+        """Проверяет, что автор совпадает с текущим пользователем."""
         obj = self.get_object()
         return obj.author == self.request.user
 
@@ -32,12 +32,15 @@ class ProfileDetailView(DetailView):
     success_url = reverse_lazy('profile', kwargs={'username': 'username'})
 
     def get_object(self):
-        """Возвращает объект User по имени пользователя, переданному в URL."""
+        """Возвращает объект User по имени пользователя."""
         username = self.kwargs.get('username')
         return get_object_or_404(User, username=username)
 
     def get_context_data(self, **kwargs):
-        """Добавляет в контекст данные о постах пользователя и объект пагинации."""
+        """
+        Добавляет в контекст данные о постах пользователя
+         и объект пагинации.
+         """
         context = super().get_context_data(**kwargs)
         user = self.object
         posts = Post.objects.filter(author=user).annotate(
@@ -66,11 +69,16 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         """Возвращает URL для перенаправления после успешного сохранения изменений."""
-        return reverse_lazy('blog:profile', kwargs={'username': self.object.username})
+        return reverse_lazy(
+            'blog:profile',
+            kwargs={'username': self.object.username})
 
 
 def get_filtered_posts():
-    """Возвращает список опубликованных постов, отсортированных по дате публикации."""
+    """
+    Возвращает список опубликованных постов,
+     отсортированных по дате публикации.
+     """
     return Post.objects.select_related(
         'author', 'category', 'location'
     ).filter(
@@ -112,14 +120,16 @@ class CategoryPostsView(ListView):
     def get_queryset(self):
         """Возвращает отфильтрованные посты для указанной категории."""
         category_slug = self.kwargs.get('category_slug')
-        category = get_object_or_404(Category, slug=category_slug, is_published=True)
+        category = get_object_or_404(
+            Category, slug=category_slug, is_published=True)
         return get_filtered_posts().filter(category=category)
 
     def get_context_data(self, **kwargs):
         """Добавляет в контекст информацию о категории."""
         context = super().get_context_data(**kwargs)
         category_slug = self.kwargs.get('category_slug')
-        context['category'] = get_object_or_404(Category, slug=category_slug, is_published=True)
+        context['category'] = get_object_or_404(
+            Category, slug=category_slug, is_published=True)
         return context
 
 
@@ -137,7 +147,9 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         """Возвращает URL для перенаправления после успешного создания поста."""
-        return reverse_lazy('blog:profile', kwargs={'username': self.request.user.username})
+        return reverse_lazy(
+            'blog:profile',
+            kwargs={'username': self.request.user.username})
 
 
 class EditPostView(LoginRequiredMixin, OnlyAuthorMixin, UpdateView):
