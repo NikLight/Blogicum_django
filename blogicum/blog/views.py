@@ -262,6 +262,7 @@ class UserPermissionMixin:
     Mixin для обеспечения доступа к комментариям
     только для их авторов.
     """
+
     def get_object(self, queryset=None):
         """
         Возвращает комментарий,
