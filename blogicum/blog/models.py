@@ -1,16 +1,30 @@
-from django.conf import settings
-
+from blogicum.constants import (TITLE_MAX_LENGTH,
+                                MAX_COMM_TEXT_LENGTH,
+                                CHARFIELD_MAX_LENGTH)
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.urls import reverse
-from core.models import BaseBlogModel
 
 User = get_user_model()
 
 
+class BaseBlogModel(models.Model):
+    is_published = models.BooleanField(
+        'Опубликовано',
+        default=True,
+        help_text='Снимите галочку, чтобы скрыть публикацию.'
+    )
+    created_at = models.DateTimeField('Добавлено',
+                                      auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ('created_at',)
+
+
 class Category(BaseBlogModel):
     title = models.CharField('Заголовок',
-                             max_length=settings.CHARFIELD_MAX_LENGTH)
+                             max_length=CHARFIELD_MAX_LENGTH)
     description = models.TextField('Описание')
     slug = models.SlugField(
         'Идентификатор',
@@ -26,24 +40,24 @@ class Category(BaseBlogModel):
         verbose_name_plural = 'Категории'
 
     def __str__(self) -> str:
-        return self.title[:settings.TITLE_MAX_LENGTH]
+        return self.title[:TITLE_MAX_LENGTH]
 
 
 class Location(BaseBlogModel):
     name = models.CharField('Название места',
-                            max_length=settings.CHARFIELD_MAX_LENGTH)
+                            max_length=CHARFIELD_MAX_LENGTH)
 
     class Meta(BaseBlogModel.Meta):
         verbose_name = 'местоположение'
         verbose_name_plural = 'Местоположения'
 
     def __str__(self) -> str:
-        return self.name[:settings.TITLE_MAX_LENGTH]
+        return self.name[:TITLE_MAX_LENGTH]
 
 
 class Post(BaseBlogModel):
     title = models.CharField('Заголовок',
-                             max_length=settings.CHARFIELD_MAX_LENGTH)
+                             max_length=CHARFIELD_MAX_LENGTH)
     text = models.TextField('Текст')
     pub_date = models.DateTimeField(
         'Дата и время публикации',
@@ -75,7 +89,7 @@ class Post(BaseBlogModel):
         ordering = ('-pub_date',)
 
     def __str__(self) -> str:
-        return self.title[:settings.TITLE_MAX_LENGTH]
+        return self.title[:TITLE_MAX_LENGTH]
 
     def get_absolute_url(self):
         return reverse('blog:post_detail', args=(self.pk,))
@@ -101,4 +115,4 @@ class Comment(BaseBlogModel):
         ordering = ('created_at',)
 
     def __str__(self):
-        return self.text[:settings.MAX_COMM_TEXT_LENGTH]
+        return self.text[:MAX_COMM_TEXT_LENGTH]

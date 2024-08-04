@@ -1,11 +1,11 @@
-from django.conf import settings
+from blogicum.constants import PAGINATE_BY
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils.timezone import now
 from django.views.generic import (UpdateView, DeleteView,
                                   DetailView, CreateView, ListView)
@@ -54,7 +54,7 @@ class ProfileDetailView(DetailView):
         Пагинирует список постов
         и возвращает объект текущей страницы.
         """
-        paginator = Paginator(posts, 10)
+        paginator = Paginator(posts, PAGINATE_BY)
         page_number = self.request.GET.get('page')
         return paginator.get_page(page_number)
 
@@ -75,7 +75,7 @@ class EditProfileView(LoginRequiredMixin, UpdateView):
         Возвращает URL для перенаправления
         после успешного сохранения изменений.
         """
-        return reverse_lazy(
+        return reverse(
             'blog:profile',
             kwargs={'username': self.object.username})
 
@@ -99,7 +99,7 @@ class IndexView(ListView):
 
     template_name = 'blog/index.html'
     context_object_name = 'page_obj'
-    paginate_by = settings.MAX_POSTS
+    paginate_by = PAGINATE_BY
 
     def get_queryset(self):
         """Возвращает отфильтрованные посты для главной страницы."""
@@ -121,7 +121,7 @@ class CategoryPostsView(ListView):
 
     template_name = 'blog/category.html'
     context_object_name = 'post_list'
-    paginate_by = settings.MAX_POSTS
+    paginate_by = PAGINATE_BY
 
     def get_queryset(self):
         """Возвращает отфильтрованные посты для указанной категории."""
@@ -253,18 +253,15 @@ class CommentPostView(LoginRequiredMixin, CreateView):
         после успешного создания комментария.
         """
         post_id = self.kwargs['post_id']
-        return reverse_lazy('blog:post_detail',
-                            kwargs={'post_id': post_id})
+        return reverse('blog:post_detail',
+                       kwargs={'post_id': post_id})
 
 
-class CommentEditView(LoginRequiredMixin, UpdateView):
-    """Представление для редактирования комментария."""
-
-    model = Comment
-    form_class = CommentForm
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
+class UserPermissionMixin:
+    """
+    Mixin для обеспечения доступа к комментариям
+    только для их авторов.
+    """
     def get_object(self, queryset=None):
         """
         Возвращает комментарий,
@@ -273,8 +270,19 @@ class CommentEditView(LoginRequiredMixin, UpdateView):
         comment = super().get_object(queryset)
         if comment.author != self.request.user:
             raise PermissionDenied(
-                "Вы не можете редактировать этот комментарий")
+                "У вас нету прав изменять этот комментарий")
         return comment
+
+
+class CommentEditView(LoginRequiredMixin,
+                      UserPermissionMixin,
+                      UpdateView):
+    """Представление для редактирования комментария."""
+
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment.html'
+    pk_url_kwarg = 'comment_id'
 
     def get_success_url(self):
         """
@@ -286,23 +294,14 @@ class CommentEditView(LoginRequiredMixin, UpdateView):
             kwargs={'post_id': self.object.post.id})
 
 
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
+class CommentDeleteView(LoginRequiredMixin,
+                        UserPermissionMixin,
+                        DeleteView):
     """Представление для удаления комментария."""
 
     model = Comment
     pk_url_kwarg = 'comment_id'
     template_name = 'blog/comment.html'
-
-    def get_object(self, queryset=None):
-        """
-        Возвращает комментарий,
-        если он принадлежит текущему пользователю.
-        """
-        comment = super().get_object()
-        if comment.author != self.request.user:
-            raise PermissionDenied(
-                "Вы не можете удалить этот комментарий")
-        return comment
 
     def get_context_data(self, **kwargs):
         """
