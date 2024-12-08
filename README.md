@@ -15,8 +15,6 @@ The project is a social network for publishing personal diaries.
 5. page with a description of the network
 6. page with network rules
 
-# Contents
-
 # Technologies
 Environment installation
 Project structure
