@@ -16,10 +16,4 @@ The project is a social network for publishing personal diaries.
 6. page with network rules
 
 # Technologies
-Environment installation
-Project structure
-Testing
-Deployment
-
-# Technologies
 Django, python, html, SQLite, Docker, nginx
